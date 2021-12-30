@@ -25,19 +25,15 @@ namespace XorEncryption
 
             string text = "https://www.javainuse.com/aesgenerator";
 
-            //var sad = Convert.ToBase64String(program.Encrypt(text));
-            //Console.WriteLine(text);
-            //Console.WriteLine(sad);
-            //var dasd = program.Decrypt(sad);
-            //Console.WriteLine(dasd);
-
-            var newENcr = program.EncryptNEW2(text);
+            var newENcr = program.AES_CBC_Encryption(text);
 
             Console.WriteLine("Dsd");
         }
 
 
-        #region XOR Encryption
+        #region XOR Encryption 
+        // Same method to encrypt and decrypt string
+
         string XorEncryption(string text, string key)
         {
             var result = new StringBuilder();
@@ -50,102 +46,13 @@ namespace XorEncryption
 
         #region AES Encryption
 
-        // ECB Implementation
-        //byte[] Encrypt(string input)
-        //{
-        //    int KEY_SIZE_inBytes = ivSecret.Length;
-
-
-        //    var sha256CryptoServiceProvider = new SHA256CryptoServiceProvider();
-        //    var hash = sha256CryptoServiceProvider.ComputeHash(Encoding.UTF8.GetBytes(Secretkey));
-        //    var key = new byte[KEY_SIZE_inBytes];
-        //    var iv = new byte[KEY_SIZE_inBytes];
-
-        //    Buffer.BlockCopy(hash, 0, key, 0, KEY_SIZE_inBytes);
-        //    Buffer.BlockCopy(hash, KEY_SIZE_inBytes, iv, 0, KEY_SIZE_inBytes);
-
-        //    using (var cipher = new AesCryptoServiceProvider().CreateEncryptor(key, iv))
-        //    using (var output = new MemoryStream())
-        //    {
-        //        using (var cryptoStream = new CryptoStream(output, cipher, CryptoStreamMode.Write))
-        //        {
-        //            var inputBytes = Encoding.UTF8.GetBytes(input);
-        //            cryptoStream.Write(inputBytes, 0, inputBytes.Length);
-        //        }
-        //        return output.ToArray();
-        //    }
-        //}
-
-        //string Decrypt(string textB)
-        //{
-        //    byte[] encryptedBytes = Convert.FromBase64String(textB);
-        //    int KEY_SIZE_inBytes = ivSecret.Length;
-
-        //    var sha256CryptoServiceProvider = new SHA256CryptoServiceProvider();
-        //    var hash = sha256CryptoServiceProvider.ComputeHash(Encoding.UTF8.GetBytes(Secretkey));
-        //    var key = new byte[KEY_SIZE_inBytes];
-        //    var iv = new byte[KEY_SIZE_inBytes];
-
-        //    Buffer.BlockCopy(hash, 0, key, 0, KEY_SIZE_inBytes);
-        //    Buffer.BlockCopy(hash, KEY_SIZE_inBytes, iv, 0, KEY_SIZE_inBytes);
-
-        //    using (var cipher = new AesCryptoServiceProvider().CreateDecryptor(key, iv))
-        //    using (var source = new MemoryStream(encryptedBytes))
-        //    using (var output = new MemoryStream())
-        //    {
-        //        using (var cryptoStream = new CryptoStream(source, cipher, CryptoStreamMode.Read))
-        //        {
-        //            cryptoStream.CopyTo(output);
-        //        }
-        //        return Encoding.UTF8.GetString(output.ToArray());
-        //    }
-        //}
-
-        //CBC Implementation
-        //string EncryptString(string plainText)
-        //{
-        //    var rnd = new Random();
-        //    var iv = new byte[ivSecret.Length];  // For this example, I'll use a random 16-byte key.
-        //    rnd.NextBytes(iv);
-        //    byte[] array;
-        //    string test = "";
-        //    using (Aes aes = Aes.Create())
-        //    {
-        //        var sha256CryptoServiceProvider = new SHA256CryptoServiceProvider();
-        //        aes.Key = sha256CryptoServiceProvider.ComputeHash(Encoding.UTF8.GetBytes(Secretkey));
-        //        //aes.Key = Encoding.UTF8.GetBytes(Secretkey);
-
-        //        aes.IV = iv;
-        //        test = Convert.ToBase64String(iv);
-        //        ICryptoTransform encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
-
-        //        using (MemoryStream memoryStream = new MemoryStream())
-        //        {
-        //            using (CryptoStream cryptoStream = new CryptoStream((Stream)memoryStream, encryptor, CryptoStreamMode.Write))
-        //            {
-        //                using (StreamWriter streamWriter = new StreamWriter((Stream)cryptoStream))
-        //                {
-        //                    streamWriter.Write(plainText);
-        //                }
-
-        //                array = memoryStream.ToArray();
-        //            }
-        //        }
-        //    }
-
-        //    return Convert.ToBase64String(array);
-        //}
-
-        #endregion
-
-
         //CBC Encryption with IV fixed
-        string EncryptNEW2(string plainText)
+        string AES_CBC_Encryption(string plainText)
         {
             byte[] cipherData;
             Aes aes = Aes.Create();
             aes.Key = Encoding.UTF8.GetBytes(Secretkey);
-            var iv = new byte[16];  // For this example, I'll use a random 16-byte key.
+            var iv = new byte[16];
             iv = Encoding.ASCII.GetBytes(ivSecret);
             aes.IV = iv;
             aes.Mode = CipherMode.CBC;
@@ -170,6 +77,68 @@ namespace XorEncryption
             string cTxt = Convert.ToBase64String(cipherData);
             return cTxt;
         }
+        #endregion
+
+        #region Decrypt String in Different Enviroment
+
+        //Decrypt in c#
+        string Decrypt(string textB)
+        {
+            byte[] encryptedBytes = Convert.FromBase64String(textB);
+            int KEY_SIZE_inBytes = ivSecret.Length;
+
+            var sha256CryptoServiceProvider = new SHA256CryptoServiceProvider();
+            var hash = sha256CryptoServiceProvider.ComputeHash(Encoding.UTF8.GetBytes(Secretkey));
+            var key = new byte[KEY_SIZE_inBytes];
+            var iv = new byte[KEY_SIZE_inBytes];
+
+            Buffer.BlockCopy(hash, 0, key, 0, KEY_SIZE_inBytes);
+            Buffer.BlockCopy(hash, KEY_SIZE_inBytes, iv, 0, KEY_SIZE_inBytes);
+
+            using (var cipher = new AesCryptoServiceProvider().CreateDecryptor(key, iv))
+            using (var source = new MemoryStream(encryptedBytes))
+            using (var output = new MemoryStream())
+            {
+                using (var cryptoStream = new CryptoStream(source, cipher, CryptoStreamMode.Read))
+                {
+                    cryptoStream.CopyTo(output);
+                }
+                return Encoding.UTF8.GetString(output.ToArray());
+            }
+
+
+        }
+
+
+
+        //Decryption in Javascript
+        //        function decrypt(transitmessage, pass)
+        //        {
+        //            var ciphertext = "EV/frugFASzg9gD9SP6iXX//djrVsuRlCwRcaigY22LKtH/xPgVcTq0Kj8M65OVloQwEyQ/FfWtk3RmjmuqbeQ==";
+        //            var key = "AlongSecrectKeyG";
+        //            var iv = "qpoUHiRDLgkAliep";
+
+        //            var ciphertextWA = CryptoJS.enc.Base64.parse(ciphertext);
+        //            var keyWA = CryptoJS.enc.Utf8.parse(key);
+        //            var ivWA = CryptoJS.enc.Utf8.parse(iv);
+        //            var ciphertextCP = { ciphertext: ciphertextWA };
+
+        //        var decrypted = CryptoJS.AES.decrypt(
+        //            ciphertextCP,
+        //            keyWA,
+        //            { iv: ivWA }
+        //);
+
+        //console.log(decrypted.toString(CryptoJS.enc.Utf8));
+        //}
+
+
+
+
+        #endregion
+
+
+
 
     }
 
